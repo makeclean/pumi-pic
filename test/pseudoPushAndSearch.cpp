@@ -249,7 +249,7 @@ void rebuild(SellCSigma<Particle>* scs, o::LOs elem_ids) {
   for(int i=0; i<scs_capacity; i++) {
     new_element[i] = scs_elem_ids_hr[i];
   }
-  scs->rebuildSCS(new_element);
+  scs->reshuffleSCS(new_element);
   delete [] new_element;
 }
 
