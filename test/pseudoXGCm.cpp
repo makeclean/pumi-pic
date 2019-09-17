@@ -351,17 +351,6 @@ int main(int argc, char** argv) {
   o::Mesh* mesh = picparts.mesh();
   mesh->ask_elem_verts(); //caching adjacency info
  
-  //Build gyro avg mappings
-  const auto rmax = 0.038;
-  const auto numRings = 3;
-  const auto ptsPerRing = 8;
-  const auto theta = 0.0;
-  setGyroConfig(rmax,numRings,ptsPerRing,theta);
-  if (!comm_rank) printGyroConfig();
-  Omega_h::LOs forward_map;
-  Omega_h::LOs backward_map;
-  createGyroRingMappings(mesh, forward_map, backward_map);
-  
   /* Particle data */
   const long int numPtcls = atol(argv[3]);
   const int numPtclsPerRank = numPtcls / comm_size;
@@ -470,9 +459,6 @@ int main(int argc, char** argv) {
     tagParentElements(picparts,scs,iter);
     if(output && !(iter%100))
       render(picparts,iter, comm_rank);
-    gyroScatter(mesh,scs,forward_map,fwdTagName);
-    gyroScatter(mesh,scs,backward_map,bkwdTagName);
-    gyroSync(picparts,fwdTagName,bkwdTagName,syncTagName);
   }
   if (comm_rank == 0)
     fprintf(stderr, "%d iterations of pseudopush (seconds) %f\n", iter, fullTimer.seconds());
