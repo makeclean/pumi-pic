@@ -401,8 +401,8 @@ int main(int argc, char** argv) {
   //in memory and can be ignored until performance is being evaluated.  These
   //are reasonable initial settings for OpenMP.
   const int sigma = INT_MAX; // full sorting
-  const int V = 1024;
-  Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace> policy(10000, 32);
+  const int V = 4;
+  Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace> policy(8, Kokkos::AUTO());
   //Create the particle structure
   SellCSigma<Particle>* scs = new SellCSigma<Particle>(policy, sigma, V, ne, actualParticles,
                                                        ptcls_per_elem, element_gids);

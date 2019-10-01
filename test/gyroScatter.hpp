@@ -47,8 +47,8 @@ o::LOs searchAndBuildMap(o::Mesh* mesh, o::Reals element_centroids,
   o::parallel_for(num_points, countPointsInElement, "countPointsInElement");
   
   const int sigma = INT_MAX;
-  const int V = 64;
-  Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace> policy(10000, 32);
+  const int V = 4;
+  Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace> policy(8, Kokkos::AUTO());
   SCSpt::kkGidView empty_gids("empty_gids", 0);
   SellCSigma<Point>* gyro_scs = new SellCSigma<Point>(policy, sigma, V,
                                                       mesh->nelems(), num_points,
