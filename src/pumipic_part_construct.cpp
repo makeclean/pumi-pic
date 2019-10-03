@@ -1,4 +1,5 @@
 #include "pumipic_mesh.hpp"
+#include "pumipic_tsan.hpp"
 #include <Omega_h_for.hpp>
 #include <Omega_h_element.hpp>
 #include <Omega_h_class.hpp>

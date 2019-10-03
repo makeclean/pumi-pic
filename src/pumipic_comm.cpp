@@ -1,4 +1,5 @@
 #include "pumipic_mesh.hpp"
+#include "pumipic_tsan.hpp"
 #include <Omega_h_for.hpp>
 #include <Omega_h_int_scan.hpp>
 #include <Omega_h_array_ops.hpp>
@@ -23,7 +24,8 @@ namespace pumipic {
     //Count the number of parts if it hasn't been set yet
     if (num_cores[edim] == 0) {
       Omega_h::Write<Omega_h::LO> has_part(comm_size, 0);
-      auto markCores = OMEGA_H_LAMBDA(const Omega_h::LO& ent_id) {
+      auto markCores = OMEGA_H_LAMBDA(const Omega_h::LO& ent_id)
+        PP_IMPL_TSAN_IGNORE_RACE {
         const Omega_h::LO owner = ent_owners[ent_id];
         has_part[owner] = 1;
       };
