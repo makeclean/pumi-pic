@@ -8,14 +8,6 @@
 #include <Omega_h_scan.hpp>
 #include <Omega_h_file.hpp>
 
-#if defined(__has_feature)
-#  if __has_feature(thread_sanitizer)
-#    define PP_TSAN_IGNORE_RACE __attribute__((no_sanitize("thread")))
-#  endif
-#else
-#  define PP_TSAN_IGNORE_RACE
-#endif
-
 namespace {
   void setOwnerByClassification(Omega_h::Mesh& m, Omega_h::LOs class_owners,
                                 Omega_h::Write<Omega_h::LO> owns);
@@ -357,7 +349,7 @@ namespace {
     Omega_h::parallel_for(comm_size, initHasPart);
 
     const auto bridge2elems = mesh.ask_up(bridge_dim, mesh.dim());
-    auto ghostingBFS = OMEGA_H_LAMBDA( Omega_h::LO bridge_id) PP_TSAN_IGNORE_RACE {
+    auto ghostingBFS = OMEGA_H_LAMBDA( Omega_h::LO bridge_id) PP_IMPL_TSAN_IGNORE_RACE {
       const auto deg = bridge2elems.a2ab[bridge_id + 1] - bridge2elems.a2ab[bridge_id];
       const auto firstElm = bridge2elems.a2ab[bridge_id];
       bool is_visited_here = false;
@@ -373,7 +365,7 @@ namespace {
     };
     for (int i = 0; i < ghost_layers || i < safe_layers; ++i) {
       Omega_h::parallel_for(mesh.nents(bridge_dim), ghostingBFS,"ghostingBFS");
-      auto copyVisit = OMEGA_H_LAMBDA( Omega_h::LO elm_id) PP_TSAN_IGNORE_RACE {
+      auto copyVisit = OMEGA_H_LAMBDA( Omega_h::LO elm_id) PP_IMPL_TSAN_IGNORE_RACE {
         is_visited[elm_id] = is_visited_next[elm_id];
         if (i < safe_layers)
           is_safe[elm_id] = is_visited_next[elm_id];
@@ -397,7 +389,7 @@ namespace {
     else {
       const Omega_h::Adj downAdj = mesh.ask_down(mesh.dim(),dim);
       auto deg = Omega_h::element_degree(mesh.family(), mesh.dim(), dim);
-      auto setSafeEnts = OMEGA_H_LAMBDA( Omega_h::LO elm_id) PP_TSAN_IGNORE_RACE {
+      auto setSafeEnts = OMEGA_H_LAMBDA( Omega_h::LO elm_id) PP_IMPL_TSAN_IGNORE_RACE {
         bool is_buffered = has_part[owner[elm_id]];
         const auto firstEnt = elm_id * deg;
         for (int j = 0; j < deg; ++j) {
