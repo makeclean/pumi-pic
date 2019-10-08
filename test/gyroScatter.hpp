@@ -46,7 +46,7 @@ o::LOs searchAndBuildMap(o::Mesh* mesh, o::Reals element_centroids,
   };
   o::parallel_for(num_points, countPointsInElement, "countPointsInElement");
   
-  const int sigma = INT_MAX;
+  const int sigma = 1;
   const int V = 64;
   Kokkos::TeamPolicy<Kokkos::DefaultExecutionSpace> policy(10000, 32);
   SCSpt::kkGidView empty_gids("empty_gids", 0);
@@ -136,11 +136,15 @@ void createGyroRingMappings(o::Mesh* mesh, o::LOs& forward_map,
   //Use adjacency search to find the element that the projected point is in
   o::Write<o::LO> starting_element(num_points,0, "starting_element");
   auto verts2Elm = mesh->ask_up(0, mesh->dim());
+  const auto numElms = mesh->nelems();
   auto setInitialElement = OMEGA_H_LAMBDA(const o::LO& id) {
     //Note: Setting initial element to be the first element adjacent to the vertex
     const o::LO vert_id = id / gppr / gnr;
+    assert(vert_id >= 0 && vert_id < verts2Elm.a2ab.size());
     const auto firstElm = verts2Elm.a2ab[vert_id];
+    assert(firstElm >= 0 && firstElm < verts2Elm.ab2b.size());
     starting_element[id] = verts2Elm.ab2b[firstElm];
+    assert(starting_element[id] >= 0 && starting_element[id] < numElms);
   };
   o::parallel_for(num_points, setInitialElement, "setInitialElement");
 
