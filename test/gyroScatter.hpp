@@ -172,6 +172,7 @@ void createGyroRingMappings(o::Mesh* mesh, o::LOs& forward_map,
 
 void gyroScatter(o::Mesh* mesh, SCS* scs, o::LOs v2v, std::string scatterTagName) {
   const auto btime = pumipic_prebarrier();
+  OMEGA_H_CHECK(cudaSuccess==cudaDeviceSynchronize());
   Kokkos::Timer timer;
   Kokkos::Profiling::pushRegion("xgcm_gyroScatter");
   int rank, comm_size;
@@ -181,9 +182,11 @@ void gyroScatter(o::Mesh* mesh, SCS* scs, o::LOs v2v, std::string scatterTagName
   const auto gnr = gyro_num_rings;
   const auto gppr = gyro_points_per_ring;
   auto elm2verts = mesh->ask_down(mesh->dim(), 0);
+  OMEGA_H_CHECK(cudaSuccess==cudaDeviceSynchronize());
   auto nvpe = 3; //triangles
   const double ringWidth = gr/gnr;
   o::Write<o::Real> ring_accum(gnr*mesh->nverts(),0, "ring_accumulator");
+  OMEGA_H_CHECK(cudaSuccess==cudaDeviceSynchronize());
   auto accumulateToRings = SCS_LAMBDA(const int& e, const int& pid, const int& mask) {
     if(mask > 0) {
       const auto ptclRadius = ringWidth*1.125; //TODO compute the radius

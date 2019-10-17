@@ -449,6 +449,7 @@ bool search_mesh_2d(o::Mesh& mesh, // (in) mesh
   MPI_Comm_size(MPI_COMM_WORLD,&comm_size);
   const auto rank_d = rank;
 
+  const auto numElms = mesh.nelems();
   const auto faces2edges = mesh.ask_down(o::FACE, o::EDGE);
   const auto edges2faces = mesh.ask_up(o::EDGE, o::FACE);
   const auto side_is_exposed = mark_exposed_sides(&mesh);
@@ -561,6 +562,7 @@ bool search_mesh_2d(o::Mesh& mesh, // (in) mesh
     found = true;
     auto cp_elm_ids = OMEGA_H_LAMBDA( o::LO i) {
       elem_ids[i] = elem_ids_next[i];
+      assert(elem_ids[i] >= -1 && elem_ids[i] < numElms);
     };
     o::parallel_for(elem_ids.size(), cp_elm_ids, "copy_elem_ids");
 
