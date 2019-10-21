@@ -118,13 +118,8 @@ void search(p::Mesh& picparts, SCS* scs, bool output) {
   auto pid = scs->get<2>();
   o::Write<o::Real> xpoints_d(3 * scsCapacity, "intersection points");
   o::Write<o::LO> xface_id(scsCapacity, "intersection faces");
-  //don't move the particles!
-  bool isFound = true;
-  auto setIDs = SCS_LAMBDA(const int& eid, const int& pid, const bool& mask) {
-    if(mask)
-      elem_ids[pid] = eid; 
-  };
-  scs->parallel_for(setIDs);
+  bool isFound = p::search_mesh_2d<Particle>(*mesh, scs, x, xtgt, pid, elem_ids,
+                                          xpoints_d, maxLoops);
   assert(isFound);
   //rebuild the SCS to set the new element-to-particle lists
   rebuild(picparts, scs, elem_ids, output);
@@ -463,11 +458,9 @@ int main(int argc, char** argv) {
       fprintf(stderr, "iter %d particles %ld\n", iter, totNp);
     timer.reset();
     ellipticalPush::push(scs, *mesh, degPerPush, iter);
-    OMEGA_H_CHECK(cudaSuccess==cudaDeviceSynchronize());
     MPI_Barrier(MPI_COMM_WORLD);
     timer.reset();
     search(picparts,scs, output);
-    OMEGA_H_CHECK(cudaSuccess==cudaDeviceSynchronize());
     scs_np = scs->nPtcls();
     MPI_Allreduce(&scs_np, &totNp, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD);
     if(totNp == 0) {
@@ -475,11 +468,11 @@ int main(int argc, char** argv) {
       break;
     }
     tagParentElements(picparts,scs,iter);
-    OMEGA_H_CHECK(cudaSuccess==cudaDeviceSynchronize());
     if(output && !(iter%100))
       render(picparts,iter, comm_rank);
+    gyroScatter(mesh,scs,forward_map,fwdTagName);
+    gyroScatter(mesh,scs,backward_map,bkwdTagName);
     gyroSync(picparts,fwdTagName,bkwdTagName,syncTagName);
-    OMEGA_H_CHECK(cudaSuccess==cudaDeviceSynchronize());
   }
   if (comm_rank == 0)
     fprintf(stderr, "%d iterations of pseudopush (seconds) %f\n", iter, fullTimer.seconds());
